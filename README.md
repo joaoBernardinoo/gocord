@@ -286,3 +286,13 @@ The test suite covers:
 - security headers, including that the CSP allows no inline script or style;
 - room survival across a peer reconnect inside the grace window, and expiry
   once the window closes with no reconnect.
+
+## Educational Disclaimer
+
+This project is developed solely as an independent, educational research demonstration of peer-to-peer WebRTC signaling, media streaming, and zero-knowledge encryption using Go and browser standards.
+
+**Non-Affiliation Notice:** This project is not affiliated with, sponsored by, endorsed by, or in any way officially associated with Discord Inc., or any of its subsidiaries or affiliates. "Discord" is a registered trademark of Discord Inc. The name "Gocord" is an arbitrary portmanteau and implies no endorsement or relationship. No proprietary protocols, client code, or private APIs belonging to Discord Inc. are used.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). See the [LICENSE](LICENSE) file for the full text, warranty disclaimer, and limitation of liability.
