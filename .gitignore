@@ -1,0 +1,34 @@
+# Binaries and build artifacts
+/server
+/ipv6-video-call
+/tmp/
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Secrets, private keys, and environment files
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*vapid_keys.json
+
+# IDE, OS, and Agent configuration
+.agents/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+codedb.snapshot
+.DS_Store
+
+# Temporary / scratch files
+clipboard.png
+

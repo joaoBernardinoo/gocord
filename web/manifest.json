@@ -1,0 +1,16 @@
+{
+  "name": "Gocord Private Video Calls",
+  "short_name": "Gocord",
+  "description": "Fast, private, self-hosted WebRTC video calling with zero server logs.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#3544EE",
+  "icons": [
+    {
+      "src": "/assets/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

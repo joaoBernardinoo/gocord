@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3544ee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gocord">
+  <title>Gocord</title>
+  <link rel="manifest" href="/assets/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/favicon.ico">
+  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    
+    <!-- ========================================== -->
+    <!-- SCREEN 1: LOBBY / ROOM CREATOR             -->
+    <!-- ========================================== -->
+    <section id="homeView" class="board-card lobby-view">
+      <!-- Nav Bar -->
+      <header class="brutalist-nav">
+        <div class="brand-mark">
+          <img src="/assets/favicon.ico" alt="" class="brand-logo-img">
+          <span class="brand-logo">GOCORD // P2P</span>
+          <span class="live-dot" aria-hidden="true"></span>
+        </div>
+        <nav class="nav-links">
+          <button id="navFriendsBtn" class="nav-link-btn" type="button">✦ CONTACTS</button>
+          <span class="nav-link">SELF-HOST</span>
+          <span class="nav-link">ROOMS</span>
+          <span class="nav-link">DOCKER &amp; CADDY</span>
+          <span class="nav-link">TELEMETRY</span>
+        </nav>
+        <div class="nav-header-actions">
+          <button id="mobileNavFriendsBtn" class="nav-friends-mobile-btn" type="button">
+            <span>✦ CONTACTS</span>
+          </button>
+          <button id="quickStartBtn" class="nav-cta-btn">
+            <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+            <span>START CALL</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Ticker Marquee -->
+      <div class="ticker-tape">
+        <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="ticker-text">100% SELF-HOSTED // ULTRA LOW LATENCY // ZERO SERVER LOGS // DOCKER READY</span>
+      </div>
+
+      <!-- Main Hero Content -->
+      <div class="hero-split">
+        <!-- Left Hero Column -->
+        <div class="hero-left">
+          <div class="headline-block">
+            <h1 class="hero-title-top">PRIVATE</h1>
+            <div class="hero-title-bottom-row">
+              <span class="hero-title-bottom">VIDEO CALLS</span>
+              <span class="star-sticker">★ 60 FPS</span>
+            </div>
+          </div>
+          <p class="hero-subhead">STANDALONE GO BINARY • DIRECT P2P MEDIA MESH • 256-BIT E2EE • H.264 HD</p>
+
+          <!-- Primary Action Hub (Create Call & Call Friends) -->
+          <div class="lobby-action-hub">
+            <div class="lobby-cta-row">
+              <!-- Action 1: Create Instant Room -->
+              <button id="createButton" class="btn-brutalist btn-create-room">
+                <svg class="icon-btn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                <div class="btn-text-col">
+                  <span class="btn-primary-title">CREATE ROOM</span>
+                  <span class="btn-sub-tag">1-CLICK INSTANT ➜</span>
+                </div>
+              </button>
+
+              <!-- Action 2: Call Friends -->
+              <button id="openFriendsBtn" class="btn-brutalist btn-friends-card" type="button" title="Open Contact Book & Push Notifications">
+                <svg class="icon-btn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <div class="btn-text-col">
+                  <span class="btn-primary-title">CALL FRIENDS</span>
+                  <span class="btn-sub-tag">CONTACT BOOK ⚡</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Action 3: Join Existing Room Input -->
+            <div class="action-card join-card-compact">
+              <div class="join-input-row">
+                <div class="input-container">
+                  <svg class="icon-input" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  <input id="joinInput" type="text" placeholder="Paste invite link or room code..." autocomplete="off" spellcheck="false">
+                </div>
+                <button id="joinButton" class="btn-brutalist btn-join">
+                  <svg class="icon-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <span>JOIN ➜</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p id="homeError" class="error-banner" hidden></p>
+        </div>
+
+        <!-- Right Graphic Column -->
+        <div class="hero-right">
+          <div class="hud-mini-header">
+            <span class="rec-mini-pill"><span class="rec-mini-dot"></span> LIVE ● P2P</span>
+            <span class="hud-stats-text">1080p // 60fps // 48kHz</span>
+          </div>
+
+          <div class="crt-mascot-box">
+            <div class="gopher-mascot-badge">
+              <svg viewBox="0 0 100 100" class="gopher-svg" aria-label="Gopher Mascot">
+                <path d="M20 40 Q20 20 50 20 Q80 20 80 40 Q80 80 50 80 Q20 80 20 40 Z" fill="#63D0FF" stroke="#0A0A0A" stroke-width="4"/>
+                <circle cx="18" cy="24" r="10" fill="#63D0FF" stroke="#0A0A0A" stroke-width="3"/>
+                <circle cx="82" cy="24" r="10" fill="#63D0FF" stroke="#0A0A0A" stroke-width="3"/>
+                <circle cx="38" cy="46" r="11" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="3"/>
+                <circle cx="62" cy="46" r="11" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="3"/>
+                <circle cx="40" cy="46" r="5" fill="#0A0A0A"/>
+                <circle cx="60" cy="46" r="5" fill="#0A0A0A"/>
+                <ellipse cx="50" cy="60" rx="12" ry="7" fill="#FAD090" stroke="#0A0A0A" stroke-width="2.5"/>
+                <ellipse cx="50" cy="56" rx="6" ry="4" fill="#0A0A0A"/>
+                <rect x="46" y="63" width="4" height="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5"/>
+                <rect x="50" y="63" width="4" height="6" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <span class="crt-label">GOCORD // STANDALONE</span>
+            <span class="crt-sub">SELF-HOSTED GOLANG WEBRTC NODE</span>
+          </div>
+
+          <div class="stickers-row">
+            <span class="sticker-chip chip-lime">★ DOCKER READY</span>
+            <span class="sticker-chip chip-orange">GOLANG DISCORD ⚡</span>
+          </div>
+
+          <div class="bento-mini-row">
+            <div class="bento-mini-card bento-zerologs">
+              <span class="bento-title">ZERO //</span>
+              <span class="bento-desc">Server Logs</span>
+            </div>
+            <div class="bento-mini-card bento-coturn">
+              <span class="bento-title">256-BIT //</span>
+              <span class="bento-desc">E2E Encrypted</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SCREEN: FRIENDS / CONTACT BOOK             -->
+    <!-- ========================================== -->
+    <section id="friendsView" class="board-card friends-view" hidden>
+      <header class="precall-header">
+        <div class="brand-mark">
+          <img src="/assets/favicon.ico" alt="" class="brand-logo-img">
+          <span class="brand-logo">GOCORD // CONTACT BOOK</span>
+        </div>
+        <div class="precall-header-actions">
+          <button id="backToHomeFromFriendsBtn" class="btn-brutalist btn-nav-new-room" type="button" title="Back to Lobby">
+            <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>BACK TO LOBBY</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="push-contacts-grid">
+        <!-- Card 1: My Call Card & Push Setup -->
+        <div class="action-card push-card">
+          <div class="action-card-header">
+            <span class="action-tag">✦ MY PUSH CALL CARD</span>
+            <span id="pushStatusBadge" class="push-status-pill pill-inactive">● PUSH INACTIVE</span>
+          </div>
+          
+          <p class="action-desc">
+            Enable browser push notifications to receive incoming calls without any central account or server database.
+          </p>
+
+          <div id="pushSetupBlock" class="push-setup-row">
+            <button id="enablePushBtn" class="btn-brutalist btn-push-enable">
+              <svg class="icon-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span id="enablePushBtnText">ENABLE CALL NOTIFICATIONS</span>
+            </button>
+          </div>
+
+          <div id="myCardBlock" class="my-card-content" hidden>
+            <div class="input-label-row">
+              <label for="myDisplayName" class="field-label">YOUR DISPLAY NAME (LOCAL ONLY):</label>
+              <div class="input-container">
+                <svg class="icon-input" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input id="myDisplayName" type="text" placeholder="e.g. Alice" maxlength="32">
+              </div>
+            </div>
+
+            <div class="copy-input-row card-copy-row">
+              <input id="myCallCardLink" readonly spellcheck="false" placeholder="Generating Call Card link...">
+              <button id="copyCallCardBtn" class="btn-brutalist btn-copy">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>COPY LINK</span>
+              </button>
+            </div>
+            
+            <div class="card-info-note">
+              <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>Share this Call Card link with friends. They can add you with 1 click to ring your browser directly.</span>
+            </div>
+          </div>
+
+          <div id="iosPushBanner" class="card-info-note ios-note" hidden>
+            <svg class="icon-inline" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <span><strong>iOS (iPhone/iPad) Note:</strong> Apple requires web apps to be installed to the Home Screen for push notifications. Tap <strong>Share (⎋)</strong> ➔ <strong>"Add to Home Screen"</strong>, then open from your home screen.</span>
+          </div>
+
+          <p id="pushError" class="error-banner" hidden></p>
+        </div>
+
+        <!-- Card 2: Contact Book (100% Local / Zero Server Storage) -->
+        <div class="action-card contacts-card">
+          <div class="action-card-header">
+            <span class="action-tag">✦ LOCAL CONTACT BOOK</span>
+            <span class="badge-pill">100% PRIVATE</span>
+          </div>
+
+          <!-- Add Contact Form -->
+          <div class="add-contact-form">
+            <div class="add-contact-inputs">
+              <div class="input-container contact-name-input-box">
+                <svg class="icon-input" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input id="contactNameInput" type="text" placeholder="Contact name (e.g. Bob)" autocomplete="off">
+              </div>
+              <div class="input-container contact-card-input-box">
+                <svg class="icon-input" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                <input id="contactCardInput" type="text" placeholder="Paste Call Card link (#card=...) or code" autocomplete="off">
+              </div>
+            </div>
+            <button id="saveContactBtn" class="btn-brutalist btn-add-contact">
+              <svg class="icon-btn" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>SAVE CONTACT</span>
+            </button>
+          </div>
+
+          <p id="contactError" class="error-banner" hidden></p>
+          <p id="contactSuccess" class="status-banner" hidden></p>
+
+          <!-- Contacts List -->
+          <div class="contacts-list-container">
+            <div class="contacts-list-header">
+              <span>SAVED CONTACTS (<span id="contactsCount">0</span>)</span>
+            </div>
+            <div id="contactsList" class="contacts-list">
+              <!-- Rendered dynamically by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 2: PRE-CALL / GREEN ROOM VIEW       -->
+    <!-- ========================================== -->
+    <section id="preCallView" class="board-card precall-view" hidden>
+      <!-- Precall Header -->
+      <header class="precall-header">
+        <div class="brand-mark">
+          <a href="/" class="brand-logo">GOCORD // GREEN ROOM</a>
+        </div>
+        <div class="precall-header-actions">
+          <button id="precallCreateRoomNavBtn" class="btn-brutalist btn-nav-new-room" title="Create a new instant room">
+            <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>
+            <span>NEW ROOM</span>
+          </button>
+          <div class="precall-room-tag">
+            <span id="preCallRoomBadge">✦ GOCORD READY: #ROOM</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="precall-split">
+        <!-- Left: Camera Preview Viewfinder -->
+        <div class="mirror-viewfinder-box">
+          <div class="viewfinder-top-hud">
+            <span class="viewfinder-tag">FACETIME HD 1080P</span>
+            <div class="vu-meter-pill">
+              <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              <div id="precallVuMeter" class="vu-bars" aria-label="Microphone VU meter">
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mirror-video-container">
+            <video id="previewVideo" autoplay playsinline muted></video>
+            <div id="previewFallback" class="mirror-fallback" hidden>
+              <div class="avatar-disc-large">
+                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <span class="mirror-fallback-text">CAMERA OFF</span>
+            </div>
+          </div>
+
+          <div class="viewfinder-bottom-toggles">
+            <button id="precallMicToggle" class="btn-toggle toggle-mic active" aria-pressed="true">
+              <svg class="icon-btn" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+              <span id="precallMicLabel">MIC ACTIVE</span>
+            </button>
+            <button id="precallCamToggle" class="btn-toggle toggle-cam active" aria-pressed="true">
+              <svg class="icon-btn" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              <span id="precallCamLabel">CAM ACTIVE</span>
+            </button>
+            <button id="precallNoiseToggle" class="btn-toggle toggle-noise active" aria-pressed="true">
+              <svg class="icon-btn" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              <span>NOISE SUPPRESSION</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Invite Sheet & Hardware Pickers -->
+        <div class="precall-actions-column">
+          <!-- Invite Share Card -->
+          <div id="inviteBlock" class="invite-share-card">
+            <span class="invite-card-title">SHARE CALL INVITATION ✦</span>
+            <p class="invite-card-sub">The secret after # is end-to-end and never touches the server.</p>
+            <div class="copy-input-row">
+              <input id="inviteURL" readonly spellcheck="false">
+              <button id="copyButton" class="btn-brutalist btn-copy">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>COPY</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hardware Device Selectors -->
+          <div class="device-pickers-card">
+            <span class="pickers-title">SELECT HARDWARE DEVICES</span>
+            
+            <div class="device-row">
+              <label for="audioSource" class="device-label">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+                <span>MICROPHONE</span>
+              </label>
+              <select id="audioSource" class="device-select"></select>
+            </div>
+
+            <div class="device-row">
+              <label for="audioOutput" class="device-label">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <span>OUTPUT SPEAKER</span>
+              </label>
+              <select id="audioOutput" class="device-select"></select>
+            </div>
+
+            <div class="device-row">
+              <label for="videoSource" class="device-label">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                <span>CAMERA LENS</span>
+              </label>
+              <select id="videoSource" class="device-select"></select>
+            </div>
+          </div>
+
+          <p id="preCallStatus" class="status-banner">Checking room status…</p>
+          <p id="preCallError" class="error-banner" hidden></p>
+
+          <!-- Giant Join Button -->
+          <button id="startButton" class="btn-brutalist btn-giant-join">
+            <svg class="icon-btn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span>JOIN VIDEO ROOM NOW ➜</span>
+          </button>
+
+          <!-- Secondary Action: Create Another Room -->
+          <button id="precallCreateNewBtn" class="btn-brutalist btn-create-another">
+            <svg class="icon-btn" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <span>CREATE ANOTHER ROOM ➜</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 3: ACTIVE CALL & BROADCAST STAGE    -->
+    <!-- ========================================== -->
+    <section id="callView" class="board-card call-view" hidden>
+      <div class="video-stage-board">
+        <!-- Main Remote Video Viewport -->
+        <div class="remote-video-canvas">
+          
+          <!-- Top Broadcast Camcorder HUD -->
+          <div class="camcorder-top-hud">
+            <div class="hud-group-left">
+              <span class="rec-live-tag">
+                <span class="rec-dot-pulsing"></span>
+                <span id="callDurationText">LIVE [00:00]</span>
+              </span>
+              <button id="callRoomBadge" class="room-id-tag" title="Click to copy invite link">
+                <span id="callRoomName">ROOM #8492</span>
+                <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+
+            <div class="hud-group-right">
+              <span id="callStatsBadge" class="telemetry-pill">1080P 60FPS // 14ms RTT // E2EE</span>
+            </div>
+          </div>
+
+          <!-- Remote Video Feed -->
+          <div class="video-stream-wrap">
+            <video id="remoteVideo" autoplay playsinline></video>
+            
+            <div id="remotePlaceholder" class="remote-placeholder-box">
+              <div class="remote-avatar-disc">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <span id="remotePeerName" class="remote-peer-title">WAITING FOR PEER TO JOIN…</span>
+              <div class="speaking-status-pill">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+                <span id="connectionStatus">WAITING FOR PEER…</span>
+              </div>
+            </div>
+
+            <button id="playRemoteButton" class="btn-play-remote" hidden>Tap to enable remote audio</button>
+
+            <!-- Floating Self-Camera PiP Viewfinder (Draggable & Snappable) -->
+            <div id="selfPipCard" class="floating-pip-card" title="Drag to reposition">
+              <div class="pip-viewport">
+                <video id="localVideo" autoplay playsinline muted></video>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Stage Controls Stack -->
+          <div class="bottom-stage-controls">
+            <!-- Floating Tactile Control Dock -->
+            <div class="tactile-control-dock" role="toolbar" aria-label="Call controls">
+              <button id="muteButton" class="dock-btn btn-dock-mic" aria-pressed="false" title="Mute/Unmute microphone">
+                <svg class="icon-dock" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                <span class="dock-label">MIC ON</span>
+              </button>
+
+              <button id="cameraButton" class="dock-btn btn-dock-cam" aria-pressed="false" title="Enable/Disable camera">
+                <svg class="icon-dock" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                <span class="dock-label">CAM ON</span>
+              </button>
+
+              <button id="shareScreenButton" class="dock-btn btn-dock-share" aria-pressed="false" title="Share Screen">
+                <svg class="icon-dock" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span class="dock-label">SHARE</span>
+              </button>
+
+              <button id="voiceFxButton" class="dock-btn btn-dock-fx" aria-pressed="false" title="Voice Noise Filter">
+                <svg class="icon-dock" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>
+                <span class="dock-label">VOICE FX</span>
+              </button>
+
+              <button id="toggleDrawerButton" class="dock-btn btn-dock-settings" aria-expanded="true" title="Toggle Settings & Stats">
+                <svg class="icon-dock" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                <span class="dock-label">SETTINGS &amp; STATS</span>
+              </button>
+
+              <button id="hangupButton" class="dock-btn btn-dock-hangup" title="Hang up and leave call">
+                <svg class="icon-dock" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                <span class="dock-label">END CALL</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Media & Telemetry Drawer -->
+        <aside id="telemetryDrawer" class="telemetry-drawer-panel">
+          <div class="drawer-header">
+            <span class="drawer-title">MEDIA &amp; TELEMETRY</span>
+            <button id="closeDrawerButton" class="btn-drawer-collapse">✕ HIDE PANEL</button>
+          </div>
+
+          <!-- In-call Device Pickers -->
+          <div class="drawer-section">
+            <span class="drawer-section-title">INPUT / OUTPUT DEVICES</span>
+            <div class="drawer-input-group">
+              <label for="drawerAudioSource" class="drawer-field-label">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+                <span>MICROPHONE</span>
+              </label>
+              <select id="drawerAudioSource" class="drawer-select"></select>
+            </div>
+            <div class="drawer-input-group">
+              <label for="drawerAudioOutput" class="drawer-field-label">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                <span>SPEAKER</span>
+              </label>
+              <select id="drawerAudioOutput" class="drawer-select"></select>
+            </div>
+            <div class="drawer-input-group">
+              <label for="drawerVideoSource" class="drawer-field-label">
+                <svg class="icon-inline" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                <span>CAMERA</span>
+              </label>
+              <select id="drawerVideoSource" class="drawer-select"></select>
+            </div>
+          </div>
+
+          <!-- Video Stream Profile Switcher -->
+          <div class="drawer-section">
+            <span class="drawer-section-title">VIDEO STREAM PROFILE</span>
+            <div class="quality-pills-row">
+              <button class="btn-quality-pill" data-quality="quality">HD 60FPS</button>
+              <button class="btn-quality-pill active" data-quality="auto">AUTO</button>
+              <button class="btn-quality-pill" data-quality="low">LOW B/W</button>
+            </div>
+            <select id="qualitySelect" hidden>
+              <option value="auto" selected>Auto</option>
+              <option value="quality">Quality</option>
+              <option value="low">Low bandwidth</option>
+            </select>
+          </div>
+
+          <!-- Video Fit Switcher -->
+          <div class="drawer-section">
+            <span class="drawer-section-title">VIDEO FIT MODE</span>
+            <div class="quality-pills-row">
+              <button class="btn-fit-pill btn-quality-pill active" data-fit="contain">CONTAIN</button>
+              <button class="btn-fit-pill btn-quality-pill" data-fit="cover">COVER</button>
+            </div>
+          </div>
+
+          <!-- WebRTC Live Telemetry Matrix -->
+          <div class="drawer-section">
+            <span class="drawer-section-title">LIVE WEBRTC METRICS</span>
+            <div class="metrics-grid">
+              <div class="metric-tile">
+                <span class="metric-label">BITRATE</span>
+                <span id="metricBitrate" class="metric-val val-blue">-- Mbps</span>
+              </div>
+              <div class="metric-tile">
+                <span class="metric-label">RTT LATENCY</span>
+                <span id="metricRtt" class="metric-val val-pink">-- ms</span>
+              </div>
+              <div class="metric-tile">
+                <span class="metric-label">PACKET LOSS</span>
+                <span id="metricLoss" class="metric-val val-dark">0.0%</span>
+              </div>
+              <div class="metric-tile">
+                <span class="metric-label">ICE CANDIDATE</span>
+                <span id="metricCandidate" class="metric-val val-orange">P2P Host</span>
+              </div>
+              <div class="metric-tile">
+                <span class="metric-label">CODEC</span>
+                <span id="metricCodec" class="metric-val val-dark">--</span>
+              </div>
+              <div class="metric-tile">
+                <span class="metric-label">RESOLUTION</span>
+                <span id="metricResolution" class="metric-val val-blue">--</span>
+              </div>
+            </div>
+            <dl id="diagnosticsGrid" class="raw-diagnostics-table" hidden></dl>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

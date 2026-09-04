@@ -1,0 +1,14 @@
+services:
+  ipv6-video-call:
+    build: .
+    container_name: ipv6-video-call
+    restart: always
+    env_file:
+      - .env
+    # Host networking is recommended for IPv6 and WebRTC to avoid Docker NAT/bridge complexities
+    network_mode: host
+    # Alternatively, if not using host networking:
+    # ports:
+    #   - "8080:8080"
+    environment:
+      - DEBUG_SIGNALING=1
