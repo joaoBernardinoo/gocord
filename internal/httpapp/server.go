@@ -1,6 +1,7 @@
 package httpapp
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,6 +33,9 @@ func New(cfg config.Config, manager *rooms.Manager, signalingHandler *signaling.
 	index, err := fs.ReadFile(webassets.Files, "index.html")
 	if err != nil {
 		return nil, fmt.Errorf("read embedded index: %w", err)
+	}
+	if cfg.PublicBaseURL != "" && !strings.Contains(cfg.PublicBaseURL, "[::1]") {
+		index = bytes.ReplaceAll(index, []byte(`content="/assets/favicon.png"`), []byte(fmt.Sprintf(`content="%s/assets/favicon.png"`, cfg.PublicBaseURL)))
 	}
 	sw, err := fs.ReadFile(webassets.Files, "sw.js")
 	if err != nil {

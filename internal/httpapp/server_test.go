@@ -274,12 +274,39 @@ func TestFaviconAndAssetsServed(t *testing.T) {
 		t.Fatalf("/favicon.ico status = %d, want 301", recFavicon.Code)
 	}
 
-	recAsset := do(t, handler, http.MethodGet, "/assets/favicon.ico")
-	if recAsset.Code != http.StatusOK {
-		t.Fatalf("/assets/favicon.ico status = %d, want 200", recAsset.Code)
+	for _, asset := range []string{"/assets/favicon.ico", "/assets/favicon.png"} {
+		recAsset := do(t, handler, http.MethodGet, asset)
+		if recAsset.Code != http.StatusOK {
+			t.Fatalf("%s status = %d, want 200", asset, recAsset.Code)
+		}
+		if recAsset.Body.Len() == 0 {
+			t.Fatalf("%s returned empty body", asset)
+		}
 	}
-	if recAsset.Body.Len() == 0 {
-		t.Fatal("/assets/favicon.ico returned empty body")
+}
+
+func TestOpenGraphAndTwitterTags(t *testing.T) {
+	_, handler := newTestApp(t, nil)
+	rec := do(t, handler, http.MethodGet, "/")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+
+	requiredTags := []string{
+		`property="og:title"`,
+		`property="og:description"`,
+		`property="og:image" content="https://call.example.com/assets/favicon.png"`,
+		`property="og:type" content="website"`,
+		`name="twitter:card" content="summary"`,
+		`name="twitter:title"`,
+		`name="twitter:description"`,
+		`name="twitter:image" content="https://call.example.com/assets/favicon.png"`,
+	}
+	for _, tag := range requiredTags {
+		if !strings.Contains(body, tag) {
+			t.Errorf("served HTML missing expected meta tag: %s", tag)
+		}
 	}
 }
 
