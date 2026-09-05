@@ -31,4 +31,5 @@ codedb.snapshot
 
 # Temporary / scratch files
 clipboard.png
+*.bak
 
