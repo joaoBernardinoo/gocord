@@ -162,8 +162,10 @@ func (a *App) pushNotify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		if strings.Contains(err.Error(), "VapidPkHashMismatch") {
-			writeJSON(w, http.StatusGone, map[string]string{"error": "contact's Call Card was created with an older server key. Ask them to click 'Refresh' and send an updated Call Card."})
+		if strings.Contains(err.Error(), "VapidPkHashMismatch") ||
+			strings.Contains(err.Error(), "VAPID public key mismatch") ||
+			strings.Contains(err.Error(), `"errno":109`) {
+			writeJSON(w, http.StatusGone, map[string]string{"error": "contact's Call Card was created with a different server key. Ask them to click 'Refresh' and send an updated Call Card."})
 			return
 		}
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
