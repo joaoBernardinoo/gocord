@@ -634,11 +634,16 @@ button:disabled {
   justify-content: center;
   align-items: center;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
+.gopher-mascot-img,
 .gopher-svg {
-  width: 54px;
-  height: 54px;
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
 }
 
 .crt-label {
