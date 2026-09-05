@@ -1,3 +1,9 @@
+<div align="right">
+  <strong>Languages:</strong>
+  <a href="README.md">English</a> |
+  <a href="README.pt-BR.md">Português (Brasil)</a>
+</div>
+
 # Browser Video Call
 
 A two-person browser video call with a small Go signaling server and native WebRTC media.
