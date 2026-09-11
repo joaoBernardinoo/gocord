@@ -4,6 +4,10 @@
   <a href="README.pt-BR.md">Português (Brasil)</a>
 </div>
 
+<p align="center">
+  <img src="animation.gif" alt="Gocord Animação" width="100%">
+</p>
+
 # Chamada de Vídeo no Navegador (Gocord)
 
 Chamada de vídeo P2P (ponto a ponto) para duas pessoas direto no navegador, com um servidor leve de sinalização em Go e mídia nativa via WebRTC.

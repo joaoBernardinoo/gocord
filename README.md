@@ -4,6 +4,10 @@
   <a href="README.pt-BR.md">Português (Brasil)</a>
 </div>
 
+<p align="center">
+  <img src="animation.gif" alt="Gocord Animation" width="100%">
+</p>
+
 # Browser Video Call
 
 A two-person browser video call with a small Go signaling server and native WebRTC media.
