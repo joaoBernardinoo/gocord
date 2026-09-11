@@ -1,11 +1,11 @@
 <div align="right">
   <strong>Idiomas:</strong>
-  <a href="README.md">English</a> |
+  <a href="../README.md">English</a> |
   <a href="README.pt-BR.md">Português (Brasil)</a>
 </div>
 
 <p align="center">
-  <img src="animation.gif" alt="Gocord Animação" width="100%">
+  <img src="assets/animation.gif" alt="Gocord Animação" width="100%">
 </p>
 
 # Chamada de Vídeo no Navegador (Gocord)

@@ -19,4 +19,4 @@ test:
 
 # Clean build artifacts
 clean:
-	rm -rf tmp server
+	rm -rf tmp server ipv6-video-call

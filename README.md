@@ -1,11 +1,11 @@
 <div align="right">
   <strong>Languages:</strong>
   <a href="README.md">English</a> |
-  <a href="README.pt-BR.md">Português (Brasil)</a>
+  <a href="docs/README.pt-BR.md">Português (Brasil)</a>
 </div>
 
 <p align="center">
-  <img src="animation.gif" alt="Gocord Animation" width="100%">
+  <img src="docs/assets/animation.gif" alt="Gocord Animation" width="100%">
 </p>
 
 # Browser Video Call
