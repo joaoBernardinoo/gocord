@@ -66,6 +66,18 @@ go mod download
 go run ./cmd/server
 ```
 
+### Hot Reloading (Live Dev Server)
+
+To automatically rebuild and restart on Go code and frontend (`web/`) changes:
+
+```bash
+# Using Makefile (automatically ensures Air is available)
+make dev
+
+# Or directly with Air
+air
+```
+
 The default listener is:
 
 ```text

@@ -55,6 +55,18 @@ go mod download
 go run ./cmd/server
 ```
 
+### Hot Reloading (Servidor de Desenvolvimento em Tempo Real)
+
+Para recompilar e reiniciar automaticamente a cada alteração no código Go ou no frontend (`web/`):
+
+```bash
+# Via Makefile (garante o Air automaticamente)
+make dev
+
+# Ou diretamente via Air
+air
+```
+
 O listener padrão é:
 
 ```text
