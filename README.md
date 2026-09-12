@@ -10,12 +10,19 @@
 
 # Gocord
 
-### Privado, auto-hospedado e gratuito
+## Disclaimer
+
+Gocord é um projeto educacional de código aberto para estudos sobre o protocolo WebRTC para videoconferência peer-to-peer. O projeto não é afiliado, patrocinado, apoiado ou endossado por qualquer serviço ou empresa de terceiros. As referências a tecnologias e serviços de terceiros são meramente descritivas.
+
+## Privado, auto-hospedado e gratuito
 
 Abra o navegador, compartilhe um link e converse. O Gocord é uma chamada de
 vídeo auto-hospedada que é sua por inteiro — a sua conversa vai direto de um
 dispositivo para o outro, sem nunca passar pelos servidores de terceiros.
 
+<p align="center">
+  <img src="docs/assets/lobby.png" alt="Gocord Lobby" width="100%">
+</p>
 ## Como funciona
 
 1. **Crie uma sala.** Você recebe um link privado com um código secreto embutido.
@@ -24,6 +31,11 @@ dispositivo para o outro, sem nunca passar pelos servidores de terceiros.
 
 Simples assim. Sem cadastro, sem download, sem "por favor, verifique seu
 número de telefone".
+
+## Para quem é
+
+- Qualquer pessoa curiosa sobre como WebRTC, TURN e criptografia de ponta a
+  ponta funcionam de verdade — a stack inteira é open source.
 
 ## Por que você escolheria o Gocord
 
@@ -54,16 +66,6 @@ número de telefone".
   codec real, a resolução, a taxa de quadros, o bitrate e a latência da sua
   chamada.
 
-## Para quem é
-
-- Casais, famílias e amigos que querem conversar por vídeo sem uma big tech
-  na sala.
-- Autônomos e consultores que precisam de um link de chamada sem instalação
-  para clientes.
-- Equipes com exigências rígidas de privacidade que não podem usar
-  aplicativos de consumo.
-- Qualquer pessoa curiosa sobre como WebRTC, TURN e criptografia de ponta a
-  ponta funcionam de verdade — a stack inteira é open source.
 
 ## O que você precisa para rodar
 
@@ -71,8 +73,6 @@ Um pequeno servidor Linux e um nome de domínio. A lista é essa — o
 aplicativo, incluindo a interface web, é distribuído como um único binário e
 consome pouquíssimos recursos. Ele roda confortavelmente em instâncias de
 entrada ou nas camadas gratuitas de nuvem.
-
-**As instruções passo a passo estão no [INSTALLATION.md](INSTALLATION.md).**
 
 Para desenvolvedores: `git clone`, `go run ./cmd/server`, abra
 `http://localhost:8080`. Detalhes no
