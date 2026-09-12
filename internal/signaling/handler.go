@@ -20,6 +20,14 @@ const (
 	pongWait       = 60 * time.Second
 	pingPeriod     = 25 * time.Second
 	writeWait      = 10 * time.Second
+
+	// hangupDrainDelay bounds how long the room stays alive after a hangup
+	// before it is deleted. The peer's own write pump writes the broadcast
+	// "hangup" message in well under a millisecond, so this is a large
+	// margin, not a tight deadline; deleting the room synchronously instead
+	// raced the notification's delivery against the room disappearing out
+	// from under the recipient's connection.
+	hangupDrainDelay = 2 * time.Second
 )
 
 type Handler struct {
@@ -132,7 +140,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case "hangup":
 			slog.Debug("call hangup requested", "room", first.Room, "client_id", peer.ID)
 			h.broadcast(first.Room, peer.ID, Message{Type: "hangup", Room: first.Room})
-			h.rooms.Delete(first.Room)
+			roomID := first.Room
+			go func() {
+				time.Sleep(hangupDrainDelay)
+				h.rooms.Delete(roomID)
+			}()
 			return
 		}
 

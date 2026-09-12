@@ -116,7 +116,9 @@ func Load() (Config, error) {
 				"publicKey":  cfg.VAPIDPublicKey,
 				"privateKey": cfg.VAPIDPrivateKey,
 			}, "", "  ")
-			_ = os.WriteFile(keyFile, savedJSON, 0600)
+			if err := os.WriteFile(keyFile, savedJSON, 0600); err != nil {
+				slog.Warn("failed to persist generated VAPID keys; they will regenerate on next restart and invalidate every existing push subscription", "file", keyFile, "error", err)
+			}
 		}
 	}
 

@@ -3,6 +3,7 @@ package push
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +18,11 @@ var (
 	ErrSubscriptionExpired = errors.New("push subscription has expired or is invalid (410 Gone)")
 	ErrInvalidSubscription = errors.New("invalid push subscription endpoint or keys")
 	ErrPushServiceFailed   = errors.New("push service delivery failed")
+	// ErrVAPIDKeyMismatch means the push service rejected the request because
+	// the subscription was created against a different VAPID public key than
+	// this server's (e.g. the server's keys were regenerated since the
+	// subscription was issued).
+	ErrVAPIDKeyMismatch = errors.New("push service rejected VAPID key (public key mismatch)")
 )
 
 type SubscriptionKeys struct {
@@ -75,6 +81,34 @@ func isKnownPushHost(u *url.URL) bool {
 	}
 	// Legacy Edge/WNS push hosts are per-channel subdomains.
 	return strings.HasSuffix(host, ".notify.windows.com")
+}
+
+// autopushError is the structured error body Mozilla's autopush service (and
+// several compatible push services) return; errno 109 is its code for a
+// VAPID public key that does not match the one the subscription was created
+// with.
+type autopushError struct {
+	Errno   int    `json:"errno"`
+	Message string `json:"message"`
+}
+
+const autopushErrnoVAPIDKeyMismatch = 109
+
+// isVAPIDKeyMismatch reports whether a non-2xx push response indicates the
+// subscription was created against a different VAPID key than this server's.
+// It parses the service's structured error body first, falling back to
+// matching known plain-text phrasings only for push services that don't
+// follow the autopush error schema.
+func isVAPIDKeyMismatch(status int, body []byte) bool {
+	if status != http.StatusUnauthorized && status != http.StatusForbidden {
+		return false
+	}
+	var perr autopushError
+	if err := json.Unmarshal(body, &perr); err == nil && perr.Errno == autopushErrnoVAPIDKeyMismatch {
+		return true
+	}
+	text := string(body)
+	return strings.Contains(text, "VapidPkHashMismatch") || strings.Contains(text, "VAPID public key mismatch")
 }
 
 // SetAllowEndpoint overrides which push endpoint URLs Send accepts, replacing
@@ -164,6 +198,12 @@ func (s *Sender) Send(ctx context.Context, sub Subscription, payload []byte, ttl
 		return ErrSubscriptionExpired
 	default:
 		msg := strings.TrimSpace(string(respBody))
+		if isVAPIDKeyMismatch(resp.StatusCode, respBody) {
+			if msg != "" {
+				return fmt.Errorf("%w: status %d (%s)", ErrVAPIDKeyMismatch, resp.StatusCode, msg)
+			}
+			return fmt.Errorf("%w: status %d", ErrVAPIDKeyMismatch, resp.StatusCode)
+		}
 		if msg != "" {
 			return fmt.Errorf("%w: status %d (%s)", ErrPushServiceFailed, resp.StatusCode, msg)
 		}
