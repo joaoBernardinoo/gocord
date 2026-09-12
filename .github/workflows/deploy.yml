@@ -1,0 +1,74 @@
+name: CI/CD Deploy to Oracle VM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests & Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Download Go Dependencies
+        run: go mod download
+
+      - name: Run Unit Tests
+        run: go test -v ./...
+
+      - name: Verify Go Build
+        run: go build -v ./cmd/server
+
+  deploy:
+    name: Deploy to Oracle VM
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    env:
+      ORACLE_HOST: ${{ secrets.ORACLE_HOST || '152.67.61.248' }}
+      ORACLE_USER: ${{ secrets.ORACLE_USER || 'ubuntu' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ORACLE_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$ORACLE_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync Files to Remote Server
+        run: |
+          REMOTE_DEST="/home/$ORACLE_USER/ipv6-video-call"
+          ssh "$ORACLE_USER@$ORACLE_HOST" "mkdir -p $REMOTE_DEST"
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='bin' \
+            --exclude='tmp' \
+            --exclude='server' \
+            --exclude='ipv6-video-call' \
+            --exclude='vapid_keys.json' \
+            --exclude='*.snapshot' \
+            --exclude='.env' \
+            ./ "$ORACLE_USER@$ORACLE_HOST:$REMOTE_DEST/"
+
+      - name: Build & Restart Docker Container
+        run: |
+          REMOTE_DEST="/home/$ORACLE_USER/ipv6-video-call"
+          ssh "$ORACLE_USER@$ORACLE_HOST" "cd $REMOTE_DEST && docker compose up -d --build && docker image prune -f"
+
+      - name: Verify Deployment Status
+        run: |
+          ssh "$ORACLE_USER@$ORACLE_HOST" "docker ps --filter name=ipv6-video-call"

@@ -1,7 +1,3 @@
-call.example.com {
-	# Bind the public HTTPS listener only on IPv6.
-	bind [::]
-
-	# The Go server itself also listens only on IPv6 loopback.
-	reverse_proxy [::1]:8080
+gocord.joaobernardino.me {
+	reverse_proxy localhost:8080
 }

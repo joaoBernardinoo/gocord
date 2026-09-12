@@ -122,6 +122,12 @@ button:disabled {
   zoom: 1.3;
 }
 
+@media (max-width: 768px) {
+  .lobby-view, .friends-view {
+    zoom: 1.0;
+  }
+}
+
 /* Fullscreen Call View Override */
 .board-card.call-view {
   padding: 0;
