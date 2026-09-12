@@ -36,7 +36,7 @@ func main() {
 	}
 
 	roomManager := rooms.NewManager(cfg.RoomTTL, cfg.EmptyRoomGrace, cfg.MaxRooms)
-	signalingHandler := signaling.NewHandler(roomManager)
+	signalingHandler := signaling.NewHandler(roomManager, cfg.TrustProxyHeaders)
 	app, err := httpapp.New(cfg, roomManager, signalingHandler)
 	if err != nil {
 		slog.Error("initialize HTTP app", "error", err)

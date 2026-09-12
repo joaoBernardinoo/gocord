@@ -9,8 +9,9 @@ type Message struct {
 }
 
 type JoinPayload struct {
-	Secret   string `json:"secret"`
-	ClientID string `json:"clientId"`
+	Secret       string `json:"secret"`
+	ClientID     string `json:"clientId"`
+	SessionToken string `json:"sessionToken,omitempty"`
 }
 
 type SessionDescription struct {

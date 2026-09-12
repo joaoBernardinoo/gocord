@@ -14,24 +14,28 @@ func TestRoomCapacityAndReconnect(t *testing.T) {
 	}
 
 	first := NewPeer("a", 2)
-	role, participants, err := manager.Join(room.ID, secret, first)
+	role, participants, token, err := manager.Join(room.ID, secret, first, "")
 	if err != nil || role != "caller" || participants != 1 {
 		t.Fatalf("first join: role=%q participants=%d err=%v", role, participants, err)
 	}
 
 	second := NewPeer("b", 2)
-	role, participants, err = manager.Join(room.ID, secret, second)
+	role, participants, _, err = manager.Join(room.ID, secret, second, "")
 	if err != nil || role != "callee" || participants != 2 {
 		t.Fatalf("second join: role=%q participants=%d err=%v", role, participants, err)
 	}
 
 	third := NewPeer("c", 2)
-	if _, _, err := manager.Join(room.ID, secret, third); !errors.Is(err, ErrRoomFull) {
+	if _, _, _, err := manager.Join(room.ID, secret, third, ""); !errors.Is(err, ErrRoomFull) {
 		t.Fatalf("expected ErrRoomFull, got %v", err)
 	}
 
+	if _, _, _, err := manager.Join(room.ID, secret, NewPeer("a", 2), "wrong-token"); !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("expected ErrUnauthorized reclaiming a role with the wrong session token, got %v", err)
+	}
+
 	reconnected := NewPeer("a", 2)
-	role, participants, err = manager.Join(room.ID, secret, reconnected)
+	role, participants, _, err = manager.Join(room.ID, secret, reconnected, token)
 	if err != nil || role != "caller" || participants != 2 {
 		t.Fatalf("reconnect: role=%q participants=%d err=%v", role, participants, err)
 	}
@@ -53,10 +57,10 @@ func TestRoomSecretAndCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	peer := NewPeer("a", 1)
-	if _, _, err := manager.Join(room.ID, "wrong", peer); !errors.Is(err, ErrUnauthorized) {
+	if _, _, _, err := manager.Join(room.ID, "wrong", peer, ""); !errors.Is(err, ErrUnauthorized) {
 		t.Fatalf("expected ErrUnauthorized, got %v", err)
 	}
-	if _, _, err := manager.Join(room.ID, secret, peer); err != nil {
+	if _, _, _, err := manager.Join(room.ID, secret, peer, ""); err != nil {
 		t.Fatal(err)
 	}
 	if _, removed := manager.Leave(room.ID, peer.ID, peer); !removed {
@@ -106,7 +110,7 @@ func TestBroadcastReportsOnlyPeersThatAccepted(t *testing.T) {
 	healthy := NewPeer("a", 4)
 	stalled := NewPeer("b", 1)
 	for _, peer := range []*Peer{healthy, stalled} {
-		if _, _, err := manager.Join(room.ID, secret, peer); err != nil {
+		if _, _, _, err := manager.Join(room.ID, secret, peer, ""); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -173,7 +177,8 @@ func TestRoomSurvivesPeerReconnectWithinGrace(t *testing.T) {
 	}
 
 	original := NewPeer("a", 4)
-	if _, _, err := manager.Join(room.ID, secret, original); err != nil {
+	_, _, origToken, err := manager.Join(room.ID, secret, original, "")
+	if err != nil {
 		t.Fatal(err)
 	}
 	if _, removed := manager.Leave(room.ID, "a", original); !removed {
@@ -187,7 +192,7 @@ func TestRoomSurvivesPeerReconnectWithinGrace(t *testing.T) {
 	}
 
 	reconnected := NewPeer("a", 4)
-	role, participants, err := manager.Join(room.ID, secret, reconnected)
+	role, participants, _, err := manager.Join(room.ID, secret, reconnected, origToken)
 	if err != nil {
 		t.Fatalf("reconnect within grace: %v", err)
 	}
@@ -220,7 +225,7 @@ func TestRoomExpiresAfterGraceWithNoReconnect(t *testing.T) {
 		t.Fatal(err)
 	}
 	peer := NewPeer("a", 4)
-	if _, _, err := manager.Join(room.ID, secret, peer); err != nil {
+	if _, _, _, err := manager.Join(room.ID, secret, peer, ""); err != nil {
 		t.Fatal(err)
 	}
 	manager.Leave(room.ID, "a", peer)
@@ -229,7 +234,7 @@ func TestRoomExpiresAfterGraceWithNoReconnect(t *testing.T) {
 	if removed := manager.Cleanup(); removed != 1 {
 		t.Fatalf("expected the abandoned room to be cleaned, cleaned %d", removed)
 	}
-	if _, _, err := manager.Join(room.ID, secret, NewPeer("a", 4)); !errors.Is(err, ErrRoomNotFound) {
+	if _, _, _, err := manager.Join(room.ID, secret, NewPeer("a", 4), ""); !errors.Is(err, ErrRoomNotFound) {
 		t.Fatalf("expected ErrRoomNotFound after grace, got %v", err)
 	}
 }

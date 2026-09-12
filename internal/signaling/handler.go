@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -22,16 +23,17 @@ const (
 )
 
 type Handler struct {
-	rooms    *rooms.Manager
-	upgrader websocket.Upgrader
+	rooms             *rooms.Manager
+	trustProxyHeaders bool
+	upgrader          websocket.Upgrader
 }
 
-func NewHandler(manager *rooms.Manager) *Handler {
-	h := &Handler{rooms: manager}
+func NewHandler(manager *rooms.Manager, trustProxyHeaders bool) *Handler {
+	h := &Handler{rooms: manager, trustProxyHeaders: trustProxyHeaders}
 	h.upgrader = websocket.Upgrader{
 		ReadBufferSize:  4096,
 		WriteBufferSize: 4096,
-		CheckOrigin:     sameOrigin,
+		CheckOrigin:     h.sameOrigin,
 	}
 	return h
 }
@@ -70,7 +72,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	peer := rooms.NewPeer(join.ClientID, sendBufferSize)
-	role, participants, err := h.rooms.Join(first.Room, join.Secret, peer)
+	role, participants, sessionToken, err := h.rooms.Join(first.Room, join.Secret, peer, join.SessionToken)
 	if err != nil {
 		slog.Warn("room join rejected", "error", err)
 		code, message := joinError(err)
@@ -87,7 +89,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go writePump(conn, peer, done)
 
 	h.send(peer, Message{Type: "joined", Room: first.Room, Payload: mustJSON(map[string]any{
-		"role": role, "participants": participants,
+		"role": role, "participants": participants, "sessionToken": sessionToken,
 	})})
 	if participants == 2 {
 		slog.Debug("both participants connected, broadcasting peer-ready", "room", first.Room)
@@ -210,19 +212,31 @@ func writePump(conn *websocket.Conn, peer *rooms.Peer, done <-chan struct{}) {
 	}
 }
 
-// sameOrigin requires an Origin header matching the request host. Browsers
-// always send Origin on a WebSocket upgrade, so a missing header means a
-// non-browser client and is rejected rather than trusted.
-func sameOrigin(r *http.Request) bool {
+// sameOrigin requires an Origin header matching the request's scheme and
+// host. Browsers always send Origin on a WebSocket upgrade, so a missing
+// header means a non-browser client and is rejected rather than trusted.
+// Matching host alone is not enough: on a host that serves both HTTP and
+// HTTPS, an http:// origin would otherwise be accepted for a wss:// upgrade.
+func (h *Handler) sameOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 	if origin == "" {
 		return false
 	}
 	u, err := url.Parse(origin)
-	if err != nil {
+	if err != nil || u.Host != r.Host {
 		return false
 	}
-	return u.Host == r.Host
+	return u.Scheme == requestScheme(r, h.trustProxyHeaders)
+}
+
+func requestScheme(r *http.Request, trustProxyHeaders bool) string {
+	if r.TLS != nil {
+		return "https"
+	}
+	if trustProxyHeaders && strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
+		return "https"
+	}
+	return "http"
 }
 
 func joinError(err error) (string, string) {

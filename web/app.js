@@ -102,6 +102,7 @@
     secret: "",
     inviteURL: "",
     clientID: loadClientID(),
+    sessionToken: "",
     role: "",
     ws: null,
     pc: null,
@@ -233,6 +234,28 @@
       sessionStorage.setItem(key, id);
     }
     return id;
+  }
+
+  // The server issues a session token on first join and requires it to
+  // reclaim the same role on reconnect, so a leaked/guessed clientID alone
+  // can't hijack an active participant's slot. Persisted per room so a page
+  // reload (same tab) can still reconnect as itself.
+  function sessionTokenKey(room) {
+    return `gocord.sessionToken.${room}`;
+  }
+
+  function loadSessionToken(room) {
+    try {
+      return sessionStorage.getItem(sessionTokenKey(room)) || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function saveSessionToken(room, token) {
+    try {
+      sessionStorage.setItem(sessionTokenKey(room), token);
+    } catch (_) {}
   }
 
   // ==========================================
@@ -1768,13 +1791,15 @@
     state.ws = new WebSocket(url);
 
     state.ws.onopen = () => {
+      if (!state.sessionToken) state.sessionToken = loadSessionToken(state.room);
       // First message must be exact Join structure matching Go backend protocol
       sendMessage({
         type: "join",
         room: state.room,
         payload: {
           secret: state.secret,
-          clientId: state.clientID
+          clientId: state.clientID,
+          sessionToken: state.sessionToken
         }
       });
     };
@@ -1899,6 +1924,10 @@
     switch (msg.type) {
       case "joined": {
         state.role = payload?.role || "caller";
+        if (payload?.sessionToken) {
+          state.sessionToken = payload.sessionToken;
+          saveSessionToken(state.room, payload.sessionToken);
+        }
         state.reconnectAttempts = 0; // a completed join proves the path works
         if (payload?.participants === 2) {
           onPeerPresent();

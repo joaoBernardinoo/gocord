@@ -74,6 +74,7 @@ type Room struct {
 	secretHash      [32]byte
 	peers           map[string]*Peer
 	roles           map[string]string
+	sessionTokens   map[string]string
 	hadParticipants bool
 	emptySince      *time.Time
 }
@@ -117,12 +118,13 @@ func (m *Manager) Create() (*Room, string, error) {
 
 	now := m.now()
 	room := &Room{
-		ID:         roomID,
-		CreatedAt:  now,
-		ExpiresAt:  now.Add(m.ttl),
-		secretHash: sha256.Sum256([]byte(secret)),
-		peers:      make(map[string]*Peer, 2),
-		roles:      make(map[string]string, 2),
+		ID:            roomID,
+		CreatedAt:     now,
+		ExpiresAt:     now.Add(m.ttl),
+		secretHash:    sha256.Sum256([]byte(secret)),
+		peers:         make(map[string]*Peer, 2),
+		roles:         make(map[string]string, 2),
+		sessionTokens: make(map[string]string, 2),
 	}
 
 	m.mu.Lock()
@@ -146,42 +148,57 @@ func (m *Manager) Count() int {
 	return len(m.rooms)
 }
 
-func (m *Manager) Join(roomID, secret string, peer *Peer) (role string, participants int, err error) {
+// Join admits peer into the room, returning its assigned role and a session
+// token bound to peer.ID. Once a client ID has taken a role, reclaiming that
+// same role (e.g. a signaling reconnect) requires presenting the exact token
+// handed back from the first successful join, so knowing/guessing another
+// participant's client ID alone is not enough to hijack their slot mid-call.
+func (m *Manager) Join(roomID, secret string, peer *Peer, sessionToken string) (role string, participants int, token string, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	room, ok := m.rooms[roomID]
 	if !ok {
-		return "", 0, ErrRoomNotFound
+		return "", 0, "", ErrRoomNotFound
 	}
 	now := m.now()
 	if !now.Before(room.ExpiresAt) {
 		delete(m.rooms, roomID)
-		return "", 0, ErrRoomExpired
+		return "", 0, "", ErrRoomExpired
 	}
 
 	hash := sha256.Sum256([]byte(secret))
 	if subtle.ConstantTimeCompare(hash[:], room.secretHash[:]) != 1 {
-		return "", 0, ErrUnauthorized
+		return "", 0, "", ErrUnauthorized
 	}
 
 	role, known := room.roles[peer.ID]
 	if !known {
 		if len(room.roles) >= 2 {
-			return "", len(room.peers), ErrRoomFull
+			return "", len(room.peers), "", ErrRoomFull
 		}
 		if len(room.roles) == 0 {
 			role = "caller"
 		} else {
 			role = "callee"
 		}
+		newToken, err := randomToken(18)
+		if err != nil {
+			return "", 0, "", err
+		}
 		room.roles[peer.ID] = role
+		room.sessionTokens[peer.ID] = newToken
+	} else {
+		expected := room.sessionTokens[peer.ID]
+		if expected == "" || subtle.ConstantTimeCompare([]byte(sessionToken), []byte(expected)) != 1 {
+			return "", len(room.peers), "", ErrUnauthorized
+		}
 	}
 
 	room.peers[peer.ID] = peer
 	room.hadParticipants = true
 	room.emptySince = nil
-	return role, len(room.peers), nil
+	return role, len(room.peers), room.sessionTokens[peer.ID], nil
 }
 
 // Leave removes a peer only if current is still the active connection for that client ID.

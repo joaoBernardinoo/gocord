@@ -53,7 +53,7 @@ func Load() (Config, error) {
 		RoomTTL:           durationOr("ROOM_TTL", 2*time.Hour),
 		EmptyRoomGrace:    durationOr("EMPTY_ROOM_GRACE", 45*time.Second),
 		ShutdownTimeout:   durationOr("SHUTDOWN_TIMEOUT", 10*time.Second),
-		DevDiagnostics:    boolOr("DEV_DIAGNOSTICS", true),
+		DevDiagnostics:    boolOr("DEV_DIAGNOSTICS", false),
 		MaxRooms:          intOr("MAX_ROOMS", 5000),
 		RoomCreateRate:    floatOr("ROOM_CREATE_RATE", 0.2),
 		RoomCreateBurst:   floatOr("ROOM_CREATE_BURST", 5),

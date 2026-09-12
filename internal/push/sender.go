@@ -31,9 +31,10 @@ type Subscription struct {
 }
 
 type Sender struct {
-	vapidKeys *VAPIDKeys
-	subject   string
-	client    *http.Client
+	vapidKeys     *VAPIDKeys
+	subject       string
+	client        *http.Client
+	allowEndpoint func(*url.URL) bool
 }
 
 func NewSender(keys *VAPIDKeys, subject string, client *http.Client) *Sender {
@@ -46,10 +47,42 @@ func NewSender(keys *VAPIDKeys, subject string, client *http.Client) *Sender {
 		subject = "mailto:admin@localhost"
 	}
 	return &Sender{
-		vapidKeys: keys,
-		subject:   subject,
-		client:    client,
+		vapidKeys:     keys,
+		subject:       subject,
+		client:        client,
+		allowEndpoint: isKnownPushHost,
 	}
+}
+
+// knownPushHosts are the endpoint hosts the standard Web Push services use.
+// The server relays arbitrary caller-supplied endpoints to deliver push
+// messages, so without this allowlist it would be an open SSRF/relay
+// primitive: any caller could point it at an internal service or use it to
+// anonymously flood a third-party host.
+var knownPushHosts = map[string]bool{
+	"fcm.googleapis.com":                true,
+	"updates.push.services.mozilla.com": true,
+	"web.push.apple.com":                true,
+}
+
+func isKnownPushHost(u *url.URL) bool {
+	if u.Scheme != "https" {
+		return false
+	}
+	host := u.Hostname()
+	if knownPushHosts[host] {
+		return true
+	}
+	// Legacy Edge/WNS push hosts are per-channel subdomains.
+	return strings.HasSuffix(host, ".notify.windows.com")
+}
+
+// SetAllowEndpoint overrides which push endpoint URLs Send accepts, replacing
+// the default allowlist of known push services (fcm.googleapis.com, Mozilla's
+// autopush, Apple's web push, WNS). Intended for tests and for deployments
+// that front push delivery with a custom relay.
+func (s *Sender) SetAllowEndpoint(fn func(*url.URL) bool) {
+	s.allowEndpoint = fn
 }
 
 func (s *Sender) VAPIDPublicKey() string {
@@ -66,8 +99,8 @@ func (s *Sender) Send(ctx context.Context, sub Subscription, payload []byte, ttl
 	}
 
 	endpointURL, err := url.Parse(sub.Endpoint)
-	if err != nil || (endpointURL.Scheme != "https" && endpointURL.Scheme != "http") {
-		return fmt.Errorf("%w: invalid endpoint URL", ErrInvalidSubscription)
+	if err != nil || !s.allowEndpoint(endpointURL) {
+		return fmt.Errorf("%w: endpoint is not a recognized push service", ErrInvalidSubscription)
 	}
 
 	uaPubBytes, err := DecodeBase64Flexible(sub.Keys.P256DH)

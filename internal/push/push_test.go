@@ -9,10 +9,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -208,6 +210,7 @@ func TestSenderDeliversNotification(t *testing.T) {
 	defer ts.Close()
 
 	sender := NewSender(keys, "mailto:admin@example.com", ts.Client())
+	sender.SetAllowEndpoint(func(*url.URL) bool { return true }) // test server isn't a real push host
 
 	sub := Subscription{
 		Endpoint: ts.URL + "/push-endpoint",
@@ -255,6 +258,7 @@ func TestSenderHandlesExpiredSubscription(t *testing.T) {
 	defer ts.Close()
 
 	sender := NewSender(keys, "mailto:admin@example.com", ts.Client())
+	sender.SetAllowEndpoint(func(*url.URL) bool { return true }) // test server isn't a real push host
 	sub := Subscription{
 		Endpoint: ts.URL + "/expired",
 		Keys: SubscriptionKeys{
@@ -266,5 +270,56 @@ func TestSenderHandlesExpiredSubscription(t *testing.T) {
 	err = sender.Send(context.Background(), sub, []byte("test"), 60)
 	if err != ErrSubscriptionExpired {
 		t.Fatalf("expected ErrSubscriptionExpired, got %v", err)
+	}
+}
+
+// The server relays notifications to any endpoint a caller supplies, so
+// Send must refuse hosts outside the standard push services (and any non
+// https scheme) rather than acting as an open relay/SSRF primitive.
+func TestSenderRejectsUnrecognizedEndpoint(t *testing.T) {
+	keys, err := GenerateVAPIDKeys()
+	if err != nil {
+		t.Fatal(err)
+	}
+	uaPriv, _ := ecdh.P256().GenerateKey(rand.Reader)
+	authSecret := make([]byte, 16)
+
+	sender := NewSender(keys, "mailto:admin@example.com", nil)
+	baseSub := Subscription{
+		Keys: SubscriptionKeys{
+			P256DH: base64.RawURLEncoding.EncodeToString(uaPriv.PublicKey().Bytes()),
+			Auth:   base64.RawURLEncoding.EncodeToString(authSecret),
+		},
+	}
+
+	for _, endpoint := range []string{
+		"http://fcm.googleapis.com/fcm/send/abc",   // not https
+		"https://internal.metadata.local/latest",   // not an allowlisted push host
+		"https://fcm.googleapis.com.evil.com/send", // suffix trick, not the real host
+	} {
+		sub := baseSub
+		sub.Endpoint = endpoint
+		err := sender.Send(context.Background(), sub, []byte("test"), 60)
+		if !errors.Is(err, ErrInvalidSubscription) {
+			t.Fatalf("endpoint %q: expected ErrInvalidSubscription, got %v", endpoint, err)
+		}
+	}
+}
+
+func TestIsKnownPushHostAcceptsStandardServices(t *testing.T) {
+	accepted := []string{
+		"https://fcm.googleapis.com/fcm/send/abc",
+		"https://updates.push.services.mozilla.com/wpush/v2/abc",
+		"https://web.push.apple.com/abc",
+		"https://channel123.notify.windows.com/abc",
+	}
+	for _, raw := range accepted {
+		u, err := url.Parse(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !isKnownPushHost(u) {
+			t.Errorf("expected %q to be accepted", raw)
+		}
 	}
 }
