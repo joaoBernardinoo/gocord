@@ -67,7 +67,7 @@ jobs:
       - name: Build & Restart Docker Container
         run: |
           REMOTE_DEST="/home/$ORACLE_USER/ipv6-video-call"
-          ssh "$ORACLE_USER@$ORACLE_HOST" "cd $REMOTE_DEST && docker compose up -d --build && docker image prune -f"
+          ssh "$ORACLE_USER@$ORACLE_HOST" "cd $REMOTE_DEST && docker compose build --no-cache && docker compose up -d --force-recreate && docker image prune -f"
 
       - name: Verify Deployment Status
         run: |
