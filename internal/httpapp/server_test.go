@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -45,7 +46,7 @@ func newTestApp(t *testing.T, mutate func(*config.Config)) (*App, http.Handler) 
 		cfg.VAPIDPrivateKey = keys.PrivateKeyBase64()
 	}
 	manager := rooms.NewManager(cfg.RoomTTL, cfg.EmptyRoomGrace, cfg.MaxRooms)
-	app, err := New(cfg, manager, signaling.NewHandler(manager))
+	app, err := New(cfg, manager, signaling.NewHandler(manager, cfg.TrustProxyHeaders))
 	if err != nil {
 		t.Fatalf("new app: %v", err)
 	}
@@ -342,7 +343,9 @@ func TestPushNotifySuccessAndExpired(t *testing.T) {
 	defer ts.Close()
 
 	app, handler := newTestApp(t, nil)
-	app.pushSender = push.NewSender(app.cfg.VAPIDKeys, app.cfg.VAPIDSubject, ts.Client())
+	sender := push.NewSender(app.cfg.VAPIDKeys, app.cfg.VAPIDSubject, ts.Client())
+	sender.SetAllowEndpoint(func(*url.URL) bool { return true })
+	app.pushSender = sender
 
 	uaPriv, err := ecdh.P256().GenerateKey(rand.Reader)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ type App struct {
 	assets      http.Handler
 	index       []byte
 	sw          []byte
+	baseURL     *url.URL
 	createLimit *rateLimiter
 	pushLimit   *rateLimiter
 	pushSender  *push.Sender
@@ -41,6 +43,10 @@ func New(cfg config.Config, manager *rooms.Manager, signalingHandler *signaling.
 	if err != nil {
 		return nil, fmt.Errorf("read embedded sw.js: %w", err)
 	}
+	baseURL, err := url.Parse(cfg.PublicBaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse PUBLIC_BASE_URL: %w", err)
+	}
 	return &App{
 		cfg:         cfg,
 		rooms:       manager,
@@ -48,6 +54,7 @@ func New(cfg config.Config, manager *rooms.Manager, signalingHandler *signaling.
 		assets:      http.FileServer(http.FS(webassets.Files)),
 		index:       index,
 		sw:          sw,
+		baseURL:     baseURL,
 		createLimit: newRateLimiter(cfg.RoomCreateRate, cfg.RoomCreateBurst),
 		pushLimit:   newRateLimiter(cfg.PushRate, cfg.PushBurst),
 		pushSender:  push.NewSender(cfg.VAPIDKeys, cfg.VAPIDSubject, nil),
@@ -94,11 +101,12 @@ func (a *App) createRoom(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not create room"})
 		return
 	}
-	url := a.cfg.PublicBaseURL + "/join/" + room.ID + "#" + secret
+	inviteURL := a.baseURL.JoinPath("join", room.ID)
+	inviteURL.Fragment = secret
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"room":      room.ID,
 		"secret":    secret,
-		"url":       url,
+		"url":       inviteURL.String(),
 		"expiresAt": room.ExpiresAt,
 	})
 }
@@ -161,13 +169,11 @@ func (a *App) pushNotify(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid subscription parameters"})
 		return
 	}
+	if errors.Is(err, push.ErrVAPIDKeyMismatch) {
+		writeJSON(w, http.StatusGone, map[string]string{"error": "contact's Call Card was created with a different server key. Ask them to click 'Refresh' and send an updated Call Card."})
+		return
+	}
 	if err != nil {
-		if strings.Contains(err.Error(), "VapidPkHashMismatch") ||
-			strings.Contains(err.Error(), "VAPID public key mismatch") ||
-			strings.Contains(err.Error(), `"errno":109`) {
-			writeJSON(w, http.StatusGone, map[string]string{"error": "contact's Call Card was created with a different server key. Ask them to click 'Refresh' and send an updated Call Card."})
-			return
-		}
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
 		return
 	}
