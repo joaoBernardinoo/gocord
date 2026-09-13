@@ -74,6 +74,7 @@ type Room struct {
 	secretHash      [32]byte
 	peers           map[string]*Peer
 	roles           map[string]string
+	sessionTokens   map[string]string
 	hadParticipants bool
 	emptySince      *time.Time
 }
@@ -117,12 +118,13 @@ func (m *Manager) Create() (*Room, string, error) {
 
 	now := m.now()
 	room := &Room{
-		ID:         roomID,
-		CreatedAt:  now,
-		ExpiresAt:  now.Add(m.ttl),
-		secretHash: sha256.Sum256([]byte(secret)),
-		peers:      make(map[string]*Peer, 2),
-		roles:      make(map[string]string, 2),
+		ID:            roomID,
+		CreatedAt:     now,
+		ExpiresAt:     now.Add(m.ttl),
+		secretHash:    sha256.Sum256([]byte(secret)),
+		peers:         make(map[string]*Peer, 2),
+		roles:         make(map[string]string, 2),
+		sessionTokens: make(map[string]string, 2),
 	}
 
 	m.mu.Lock()
@@ -146,42 +148,52 @@ func (m *Manager) Count() int {
 	return len(m.rooms)
 }
 
-func (m *Manager) Join(roomID, secret string, peer *Peer) (role string, participants int, err error) {
+func (m *Manager) Join(roomID, secret string, peer *Peer, sessionToken string) (role string, participants int, token string, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	room, ok := m.rooms[roomID]
 	if !ok {
-		return "", 0, ErrRoomNotFound
+		return "", 0, "", ErrRoomNotFound
 	}
 	now := m.now()
 	if !now.Before(room.ExpiresAt) {
 		delete(m.rooms, roomID)
-		return "", 0, ErrRoomExpired
+		return "", 0, "", ErrRoomExpired
 	}
 
 	hash := sha256.Sum256([]byte(secret))
 	if subtle.ConstantTimeCompare(hash[:], room.secretHash[:]) != 1 {
-		return "", 0, ErrUnauthorized
+		return "", 0, "", ErrUnauthorized
 	}
 
 	role, known := room.roles[peer.ID]
 	if !known {
 		if len(room.roles) >= 2 {
-			return "", len(room.peers), ErrRoomFull
+			return "", len(room.peers), "", ErrRoomFull
 		}
 		if len(room.roles) == 0 {
 			role = "caller"
 		} else {
 			role = "callee"
 		}
+		newToken, err := randomToken(18)
+		if err != nil {
+			return "", 0, "", err
+		}
 		room.roles[peer.ID] = role
+		room.sessionTokens[peer.ID] = newToken
+	} else {
+		expected := room.sessionTokens[peer.ID]
+		if expected == "" || subtle.ConstantTimeCompare([]byte(sessionToken), []byte(expected)) != 1 {
+			return "", len(room.peers), "", ErrUnauthorized
+		}
 	}
 
 	room.peers[peer.ID] = peer
 	room.hadParticipants = true
 	room.emptySince = nil
-	return role, len(room.peers), nil
+	return role, len(room.peers), room.sessionTokens[peer.ID], nil
 }
 
 // Leave removes a peer only if current is still the active connection for that client ID.
@@ -247,7 +259,10 @@ func (m *Manager) Broadcast(roomID, exceptPeerID string, payload []byte) int {
 
 func (m *Manager) Delete(roomID string) {
 	m.mu.Lock()
-	delete(m.rooms, roomID)
+	if room, ok := m.rooms[roomID]; ok {
+		killPeersLocked(room)
+		delete(m.rooms, roomID)
+	}
 	m.mu.Unlock()
 }
 
@@ -275,11 +290,18 @@ func (m *Manager) evictLocked(now time.Time) int {
 		expired := !now.Before(room.ExpiresAt)
 		emptyTooLong := room.emptySince != nil && now.Sub(*room.emptySince) >= m.emptyGrace
 		if expired || emptyTooLong {
+			killPeersLocked(room)
 			delete(m.rooms, id)
 			removed++
 		}
 	}
 	return removed
+}
+
+func killPeersLocked(room *Room) {
+	for _, peer := range room.peers {
+		peer.Kill()
+	}
 }
 
 func randomToken(bytes int) (string, error) {

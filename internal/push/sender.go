@@ -3,6 +3,7 @@ package push
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +18,7 @@ var (
 	ErrSubscriptionExpired = errors.New("push subscription has expired or is invalid (410 Gone)")
 	ErrInvalidSubscription = errors.New("invalid push subscription endpoint or keys")
 	ErrPushServiceFailed   = errors.New("push service delivery failed")
+	ErrVAPIDKeyMismatch    = errors.New("push service rejected VAPID key (public key mismatch)")
 )
 
 type SubscriptionKeys struct {
@@ -31,9 +33,10 @@ type Subscription struct {
 }
 
 type Sender struct {
-	vapidKeys *VAPIDKeys
-	subject   string
-	client    *http.Client
+	vapidKeys     *VAPIDKeys
+	subject       string
+	client        *http.Client
+	allowEndpoint func(*url.URL) bool
 }
 
 func NewSender(keys *VAPIDKeys, subject string, client *http.Client) *Sender {
@@ -46,10 +49,51 @@ func NewSender(keys *VAPIDKeys, subject string, client *http.Client) *Sender {
 		subject = "mailto:admin@localhost"
 	}
 	return &Sender{
-		vapidKeys: keys,
-		subject:   subject,
-		client:    client,
+		vapidKeys:     keys,
+		subject:       subject,
+		client:        client,
+		allowEndpoint: isKnownPushHost,
 	}
+}
+
+var knownPushHosts = map[string]bool{
+	"fcm.googleapis.com":                true,
+	"updates.push.services.mozilla.com": true,
+	"web.push.apple.com":                true,
+}
+
+func isKnownPushHost(u *url.URL) bool {
+	if u.Scheme != "https" {
+		return false
+	}
+	host := u.Hostname()
+	if knownPushHosts[host] {
+		return true
+	}
+	return strings.HasSuffix(host, ".notify.windows.com")
+}
+
+type autopushError struct {
+	Errno   int    `json:"errno"`
+	Message string `json:"message"`
+}
+
+const autopushErrnoVAPIDKeyMismatch = 109
+
+func isVAPIDKeyMismatch(status int, body []byte) bool {
+	if status != http.StatusUnauthorized && status != http.StatusForbidden {
+		return false
+	}
+	var perr autopushError
+	if err := json.Unmarshal(body, &perr); err == nil && perr.Errno == autopushErrnoVAPIDKeyMismatch {
+		return true
+	}
+	text := string(body)
+	return strings.Contains(text, "VapidPkHashMismatch") || strings.Contains(text, "VAPID public key mismatch")
+}
+
+func (s *Sender) SetAllowEndpoint(fn func(*url.URL) bool) {
+	s.allowEndpoint = fn
 }
 
 func (s *Sender) VAPIDPublicKey() string {
@@ -66,8 +110,8 @@ func (s *Sender) Send(ctx context.Context, sub Subscription, payload []byte, ttl
 	}
 
 	endpointURL, err := url.Parse(sub.Endpoint)
-	if err != nil || (endpointURL.Scheme != "https" && endpointURL.Scheme != "http") {
-		return fmt.Errorf("%w: invalid endpoint URL", ErrInvalidSubscription)
+	if err != nil || !s.allowEndpoint(endpointURL) {
+		return fmt.Errorf("%w: endpoint is not a recognized push service", ErrInvalidSubscription)
 	}
 
 	uaPubBytes, err := DecodeBase64Flexible(sub.Keys.P256DH)
@@ -131,6 +175,12 @@ func (s *Sender) Send(ctx context.Context, sub Subscription, payload []byte, ttl
 		return ErrSubscriptionExpired
 	default:
 		msg := strings.TrimSpace(string(respBody))
+		if isVAPIDKeyMismatch(resp.StatusCode, respBody) {
+			if msg != "" {
+				return fmt.Errorf("%w: status %d (%s)", ErrVAPIDKeyMismatch, resp.StatusCode, msg)
+			}
+			return fmt.Errorf("%w: status %d", ErrVAPIDKeyMismatch, resp.StatusCode)
+		}
 		if msg != "" {
 			return fmt.Errorf("%w: status %d (%s)", ErrPushServiceFailed, resp.StatusCode, msg)
 		}
