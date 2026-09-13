@@ -144,7 +144,10 @@ const IndexHTML = `<!doctype html>
           </div>
 
           <div class="hero-logo-box">
-            <img src="/assets/bg-removed-logo.png" alt="Gocord Logo" class="hero-logo-img">
+            <picture>
+              <source srcset="/assets/bg-removed-logo.webp" type="image/webp">
+              <img src="/assets/bg-removed-logo.png" alt="Gocord Logo" class="hero-logo-img" width="220" height="220" fetchpriority="high" decoding="async">
+            </picture>
           </div>
 
           <div class="stickers-row">

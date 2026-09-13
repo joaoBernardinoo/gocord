@@ -2,8 +2,8 @@ package web
 
 import "embed"
 
-// Files contains the complete browser client so the production binary is self-contained.
+// Files contains binary and config assets in the assets sub-directory.
 //
-//go:embed favicon.ico favicon.png bg-removed-logo.png icon-192.png icon-512.png manifest.json
+//go:embed assets/*
 var Files embed.FS
 

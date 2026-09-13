@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"strings"
@@ -44,11 +45,15 @@ func New(cfg config.Config, manager *rooms.Manager, signalingHandler *signaling.
 	if err != nil {
 		return nil, fmt.Errorf("parse PUBLIC_BASE_URL: %w", err)
 	}
+	assetsFS, err := fs.Sub(webassets.Files, "assets")
+	if err != nil {
+		return nil, fmt.Errorf("sub embedded assets: %w", err)
+	}
 	return &App{
 		cfg:         cfg,
 		rooms:       manager,
 		signaling:   signalingHandler,
-		assets:      http.FileServer(http.FS(webassets.Files)),
+		assets:      cacheControlAssets(http.FileServer(http.FS(assetsFS))),
 		index:       index,
 		styles:      styles,
 		appJS:       appJS,
@@ -233,4 +238,12 @@ func securityHeaders(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func cacheControlAssets(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		next.ServeHTTP(w, r)
+	})
+}
+
 
