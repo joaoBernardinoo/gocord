@@ -21,12 +21,6 @@ const (
 	pingPeriod     = 25 * time.Second
 	writeWait      = 10 * time.Second
 
-	// hangupDrainDelay bounds how long the room stays alive after a hangup
-	// before it is deleted. The peer's own write pump writes the broadcast
-	// "hangup" message in well under a millisecond, so this is a large
-	// margin, not a tight deadline; deleting the room synchronously instead
-	// raced the notification's delivery against the room disappearing out
-	// from under the recipient's connection.
 	hangupDrainDelay = 2 * time.Second
 )
 
@@ -224,11 +218,6 @@ func writePump(conn *websocket.Conn, peer *rooms.Peer, done <-chan struct{}) {
 	}
 }
 
-// sameOrigin requires an Origin header matching the request's scheme and
-// host. Browsers always send Origin on a WebSocket upgrade, so a missing
-// header means a non-browser client and is rejected rather than trusted.
-// Matching host alone is not enough: on a host that serves both HTTP and
-// HTTPS, an http:// origin would otherwise be accepted for a wss:// upgrade.
 func (h *Handler) sameOrigin(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 	if origin == "" {

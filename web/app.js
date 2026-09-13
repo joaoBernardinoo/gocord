@@ -236,10 +236,6 @@
     return id;
   }
 
-  // The server issues a session token on first join and requires it to
-  // reclaim the same role on reconnect, so a leaked/guessed clientID alone
-  // can't hijack an active participant's slot. Persisted per room so a page
-  // reload (same tab) can still reconnect as itself.
   function sessionTokenKey(room) {
     return `gocord.sessionToken.${room}`;
   }

@@ -344,7 +344,7 @@ func TestPushNotifySuccessAndExpired(t *testing.T) {
 
 	app, handler := newTestApp(t, nil)
 	sender := push.NewSender(app.cfg.VAPIDKeys, app.cfg.VAPIDSubject, ts.Client())
-	sender.SetAllowEndpoint(func(*url.URL) bool { return true }) // test server isn't a real push host
+	sender.SetAllowEndpoint(func(*url.URL) bool { return true })
 	app.pushSender = sender
 
 	uaPriv, err := ecdh.P256().GenerateKey(rand.Reader)

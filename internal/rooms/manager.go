@@ -148,11 +148,6 @@ func (m *Manager) Count() int {
 	return len(m.rooms)
 }
 
-// Join admits peer into the room, returning its assigned role and a session
-// token bound to peer.ID. Once a client ID has taken a role, reclaiming that
-// same role (e.g. a signaling reconnect) requires presenting the exact token
-// handed back from the first successful join, so knowing/guessing another
-// participant's client ID alone is not enough to hijack their slot mid-call.
 func (m *Manager) Join(roomID, secret string, peer *Peer, sessionToken string) (role string, participants int, token string, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -262,9 +257,6 @@ func (m *Manager) Broadcast(roomID, exceptPeerID string, payload []byte) int {
 	return sent
 }
 
-// Delete removes a room and closes any sockets still registered to it, so a
-// deleted room's connections are torn down immediately instead of lingering
-// until their own ping/pong timeout.
 func (m *Manager) Delete(roomID string) {
 	m.mu.Lock()
 	if room, ok := m.rooms[roomID]; ok {
@@ -292,12 +284,6 @@ func (m *Manager) Cleanup() int {
 }
 
 // evictLocked drops expired and long-empty rooms. Callers must hold mu.
-//
-// A room can have live peer connections when it is evicted (e.g. a peer that
-// never sends a hangup and just sits past the room's TTL). Those sockets
-// must be closed here rather than left to time out on their own ping/pong
-// deadline, or an evicted room leaks a goroutine and an open connection per
-// stale peer until that deadline eventually fires.
 func (m *Manager) evictLocked(now time.Time) int {
 	removed := 0
 	for id, room := range m.rooms {
@@ -312,8 +298,6 @@ func (m *Manager) evictLocked(now time.Time) int {
 	return removed
 }
 
-// killPeersLocked closes every peer connection still registered to room.
-// Callers must hold mu.
 func killPeersLocked(room *Room) {
 	for _, peer := range room.peers {
 		peer.Kill()

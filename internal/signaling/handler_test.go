@@ -41,7 +41,6 @@ func TestSameOriginRequiresMatchingSchemeAndHost(t *testing.T) {
 		t.Fatal("mismatched host must be rejected")
 	}
 
-	// X-Forwarded-Proto only counts when the handler trusts proxy headers.
 	untrusted := &Handler{trustProxyHeaders: false}
 	if untrusted.sameOrigin(newReq("https://call.example.com", "call.example.com", false, "https")) {
 		t.Fatal("X-Forwarded-Proto must be ignored when proxy headers are not trusted")

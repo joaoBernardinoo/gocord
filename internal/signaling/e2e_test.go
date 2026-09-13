@@ -13,8 +13,6 @@ import (
 	"ipv6call/internal/rooms"
 )
 
-// dialPeer opens a signaling connection and completes the join handshake,
-// returning the connection and the "joined" message payload.
 func dialPeer(t *testing.T, wsURL, origin, room, secret, clientID string) (*websocket.Conn, map[string]any) {
 	t.Helper()
 	header := http.Header{}
@@ -39,9 +37,6 @@ func dialPeer(t *testing.T, wsURL, origin, room, secret, clientID string) (*webs
 	return conn, payload
 }
 
-// readMessage reads the next message and fails the test unless it has
-// wantType, skipping any "pong"/"peer-ready" noise isn't attempted here: the
-// flow below is sequenced so each read has exactly one expected message.
 func readMessage(t *testing.T, conn *websocket.Conn, wantType string) Message {
 	t.Helper()
 	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
@@ -81,8 +76,6 @@ func TestSignalingEndToEndJoinOfferAnswerHangup(t *testing.T) {
 		t.Fatalf("callee role = %v, want callee", calleeJoined["role"])
 	}
 
-	// Both participants are now present: "peer-ready" is broadcast to both,
-	// and the caller is expected to kick off the offer.
 	readMessage(t, callerConn, "peer-ready")
 	readMessage(t, calleeConn, "peer-ready")
 
@@ -118,8 +111,6 @@ func TestSignalingEndToEndJoinOfferAnswerHangup(t *testing.T) {
 		t.Fatalf("relayed answer = %+v, want type=answer sdp=%q", relayedAnswer, answerSDP)
 	}
 
-	// Hangup must reach the other participant even though the room is torn
-	// down shortly after.
 	if err := callerConn.WriteJSON(Message{Type: "hangup", Room: room.ID}); err != nil {
 		t.Fatalf("caller: write hangup: %v", err)
 	}

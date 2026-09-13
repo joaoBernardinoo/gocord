@@ -210,7 +210,7 @@ func TestSenderDeliversNotification(t *testing.T) {
 	defer ts.Close()
 
 	sender := NewSender(keys, "mailto:admin@example.com", ts.Client())
-	sender.SetAllowEndpoint(func(*url.URL) bool { return true }) // test server isn't a real push host
+	sender.SetAllowEndpoint(func(*url.URL) bool { return true })
 
 	sub := Subscription{
 		Endpoint: ts.URL + "/push-endpoint",
@@ -258,7 +258,7 @@ func TestSenderHandlesExpiredSubscription(t *testing.T) {
 	defer ts.Close()
 
 	sender := NewSender(keys, "mailto:admin@example.com", ts.Client())
-	sender.SetAllowEndpoint(func(*url.URL) bool { return true }) // test server isn't a real push host
+	sender.SetAllowEndpoint(func(*url.URL) bool { return true })
 	sub := Subscription{
 		Endpoint: ts.URL + "/expired",
 		Keys: SubscriptionKeys{
@@ -273,9 +273,6 @@ func TestSenderHandlesExpiredSubscription(t *testing.T) {
 	}
 }
 
-// The server relays notifications to any endpoint a caller supplies, so
-// Send must refuse hosts outside the standard push services (and any non
-// https scheme) rather than acting as an open relay/SSRF primitive.
 func TestSenderRejectsUnrecognizedEndpoint(t *testing.T) {
 	keys, err := GenerateVAPIDKeys()
 	if err != nil {
@@ -293,9 +290,9 @@ func TestSenderRejectsUnrecognizedEndpoint(t *testing.T) {
 	}
 
 	for _, endpoint := range []string{
-		"http://fcm.googleapis.com/fcm/send/abc",   // not https
-		"https://internal.metadata.local/latest",   // not an allowlisted push host
-		"https://fcm.googleapis.com.evil.com/send", // suffix trick, not the real host
+		"http://fcm.googleapis.com/fcm/send/abc",
+		"https://internal.metadata.local/latest",
+		"https://fcm.googleapis.com.evil.com/send",
 	} {
 		sub := baseSub
 		sub.Endpoint = endpoint

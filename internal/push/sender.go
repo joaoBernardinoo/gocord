@@ -18,11 +18,7 @@ var (
 	ErrSubscriptionExpired = errors.New("push subscription has expired or is invalid (410 Gone)")
 	ErrInvalidSubscription = errors.New("invalid push subscription endpoint or keys")
 	ErrPushServiceFailed   = errors.New("push service delivery failed")
-	// ErrVAPIDKeyMismatch means the push service rejected the request because
-	// the subscription was created against a different VAPID public key than
-	// this server's (e.g. the server's keys were regenerated since the
-	// subscription was issued).
-	ErrVAPIDKeyMismatch = errors.New("push service rejected VAPID key (public key mismatch)")
+	ErrVAPIDKeyMismatch    = errors.New("push service rejected VAPID key (public key mismatch)")
 )
 
 type SubscriptionKeys struct {
@@ -60,11 +56,6 @@ func NewSender(keys *VAPIDKeys, subject string, client *http.Client) *Sender {
 	}
 }
 
-// knownPushHosts are the endpoint hosts the standard Web Push services use.
-// The server relays arbitrary caller-supplied endpoints to deliver push
-// messages, so without this allowlist it would be an open SSRF/relay
-// primitive: any caller could point it at an internal service or use it to
-// anonymously flood a third-party host.
 var knownPushHosts = map[string]bool{
 	"fcm.googleapis.com":                true,
 	"updates.push.services.mozilla.com": true,
@@ -79,14 +70,9 @@ func isKnownPushHost(u *url.URL) bool {
 	if knownPushHosts[host] {
 		return true
 	}
-	// Legacy Edge/WNS push hosts are per-channel subdomains.
 	return strings.HasSuffix(host, ".notify.windows.com")
 }
 
-// autopushError is the structured error body Mozilla's autopush service (and
-// several compatible push services) return; errno 109 is its code for a
-// VAPID public key that does not match the one the subscription was created
-// with.
 type autopushError struct {
 	Errno   int    `json:"errno"`
 	Message string `json:"message"`
@@ -94,11 +80,6 @@ type autopushError struct {
 
 const autopushErrnoVAPIDKeyMismatch = 109
 
-// isVAPIDKeyMismatch reports whether a non-2xx push response indicates the
-// subscription was created against a different VAPID key than this server's.
-// It parses the service's structured error body first, falling back to
-// matching known plain-text phrasings only for push services that don't
-// follow the autopush error schema.
 func isVAPIDKeyMismatch(status int, body []byte) bool {
 	if status != http.StatusUnauthorized && status != http.StatusForbidden {
 		return false
@@ -111,10 +92,6 @@ func isVAPIDKeyMismatch(status int, body []byte) bool {
 	return strings.Contains(text, "VapidPkHashMismatch") || strings.Contains(text, "VAPID public key mismatch")
 }
 
-// SetAllowEndpoint overrides which push endpoint URLs Send accepts, replacing
-// the default allowlist of known push services (fcm.googleapis.com, Mozilla's
-// autopush, Apple's web push, WNS). Intended for tests and for deployments
-// that front push delivery with a custom relay.
 func (s *Sender) SetAllowEndpoint(fn func(*url.URL) bool) {
 	s.allowEndpoint = fn
 }
