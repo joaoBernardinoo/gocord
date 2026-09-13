@@ -23,6 +23,8 @@ type App struct {
 	signaling   *signaling.Handler
 	assets      http.Handler
 	index       []byte
+	styles      []byte
+	appJS       []byte
 	sw          []byte
 	baseURL     *url.URL
 	createLimit *rateLimiter
@@ -36,6 +38,8 @@ func New(cfg config.Config, manager *rooms.Manager, signalingHandler *signaling.
 		index = bytes.ReplaceAll(index, []byte(`content="/assets/favicon.png"`), []byte(fmt.Sprintf(`content="%s/assets/favicon.png"`, cfg.PublicBaseURL)))
 	}
 	sw := []byte(webassets.ServiceWorkerJS)
+	styles := []byte(webassets.StylesCSS)
+	appJS := []byte(webassets.AppJS)
 	baseURL, err := url.Parse(cfg.PublicBaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse PUBLIC_BASE_URL: %w", err)
@@ -46,6 +50,8 @@ func New(cfg config.Config, manager *rooms.Manager, signalingHandler *signaling.
 		signaling:   signalingHandler,
 		assets:      http.FileServer(http.FS(webassets.Files)),
 		index:       index,
+		styles:      styles,
+		appJS:       appJS,
 		sw:          sw,
 		baseURL:     baseURL,
 		createLimit: newRateLimiter(cfg.RoomCreateRate, cfg.RoomCreateBurst),
@@ -60,6 +66,8 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/rooms/{room}", a.roomStatus)
 	mux.HandleFunc("GET /api/config", a.clientConfig)
 	mux.HandleFunc("POST /api/push/notify", a.pushNotify)
+	mux.HandleFunc("GET /assets/styles.css", a.stylesCSS)
+	mux.HandleFunc("GET /assets/app.js", a.appScript)
 	mux.HandleFunc("GET /sw.js", a.serviceWorker)
 	mux.HandleFunc("GET /assets/sw.js", a.serviceWorker)
 	mux.Handle("GET /ws/", a.signaling)
@@ -172,6 +180,18 @@ func (a *App) pushNotify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+func (a *App) stylesCSS(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/css; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	_, _ = w.Write(a.styles)
+}
+
+func (a *App) appScript(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	_, _ = w.Write(a.appJS)
 }
 
 func (a *App) serviceWorker(w http.ResponseWriter, r *http.Request) {

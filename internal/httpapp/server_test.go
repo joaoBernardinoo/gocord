@@ -275,7 +275,7 @@ func TestFaviconAndAssetsServed(t *testing.T) {
 		t.Fatalf("/favicon.ico status = %d, want 301", recFavicon.Code)
 	}
 
-	for _, asset := range []string{"/assets/favicon.ico", "/assets/favicon.png"} {
+	for _, asset := range []string{"/assets/favicon.ico", "/assets/favicon.png", "/assets/styles.css", "/assets/app.js"} {
 		recAsset := do(t, handler, http.MethodGet, asset)
 		if recAsset.Code != http.StatusOK {
 			t.Fatalf("%s status = %d, want 200", asset, recAsset.Code)
