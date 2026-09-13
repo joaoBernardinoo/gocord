@@ -53,15 +53,15 @@ jobs:
           REMOTE_DEST="/home/$ORACLE_USER/ipv6-video-call"
           ssh "$ORACLE_USER@$ORACLE_HOST" "mkdir -p $REMOTE_DEST"
           rsync -avz --delete \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='bin' \
-            --exclude='tmp' \
-            --exclude='server' \
-            --exclude='ipv6-video-call' \
-            --exclude='vapid_keys.json' \
+            --exclude='/.git' \
+            --exclude='/.github' \
+            --exclude='/bin' \
+            --exclude='/tmp' \
+            --exclude='/server' \
+            --exclude='/ipv6-video-call' \
+            --exclude='/vapid_keys.json' \
             --exclude='*.snapshot' \
-            --exclude='.env' \
+            --exclude='/.env' \
             ./ "$ORACLE_USER@$ORACLE_HOST:$REMOTE_DEST/"
 
       - name: Build & Restart Docker Container
